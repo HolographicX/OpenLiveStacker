@@ -37,6 +37,7 @@ jobs:
           cmake -DDISABLE_STATIC=ON -DCMAKE_INSTALL_PREFIX=/usr ..
           make -j$(nproc)
           sudo make install
+          cd ..
 
       - name: Build OpenLiveStacker
         run: |
