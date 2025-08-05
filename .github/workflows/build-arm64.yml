@@ -1,0 +1,57 @@
+name: Build OpenLiveStacker on ARM64
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Build on ubuntu-22.04-arm
+    runs-on: ubuntu-22.04-arm
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            git python3 cmake build-essential \
+            libgphoto2-dev libuvc-dev libtiff-dev \
+            libpcre3-dev libcurl4-openssl-dev zlib1g-dev \
+            libraw-dev libopencv-dev libopencv-imgcodecs-dev \
+            libopencv-imgproc-dev libcfitsio-dev libnova-dev libindi-dev \
+            pkg-config wget unzip
+
+      - name: Install CppCMS
+        run: |
+          git clone https://github.com/artyom-beilis/cppcms
+          cd cppcms
+          mkdir build
+          cd build
+          cmake -DDISABLE_STATIC=ON -DCMAKE_INSTALL_PREFIX=/usr ..
+          make -j$(nproc)
+          sudo make install
+
+      - name: Build OpenLiveStacker
+        run: |
+          mkdir build
+          cd build
+          cmake ..
+          make -j$(nproc)
+
+      - name: Create tar.gz archive
+        run: |
+          cd build
+          tar -czf ../openlivestacker-arm64.tar.gz *
+
+      - name: Upload .tar.gz artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: openlivestacker-arm64
+          path: openlivestacker-arm64.tar.gz
